@@ -1,10 +1,13 @@
 import os
+from wsgiref import headers
 import certifi
 import pymongo
 import base64
-from flask import Flask
+import authentication 
+from flask_cors import CORS
+from flask import Flask, request ,jsonify
 app =Flask(__name__)
-
+CORS(app)
 ca = certifi.where()
 envmode = os.environ.get('envmode')
 user_mongo = os.environ.get('user_mongo')
@@ -12,8 +15,15 @@ pass_mongo = os.environ.get('pass_mongo')
 cluster_mongo = os.environ.get('cluster_mongo')
 
 conn = pymongo.MongoClient("mongodb+srv://{}:{}@{}.mongodb.net/retryWrites=true&w=majority".format(user_mongo, pass_mongo,cluster_mongo), tlsCAFile=ca)
-db_configlobal = conn['library']
+db_base = conn['library']
+auth = authentication.oauth()
 
+@app.route('/api/v1/books', methods=['GET'])
+def books():
+    if request.method == 'GET':
+        headers = request.headers
+        val = auth.login(db_base,headers)
+        return jsonify(val)
 
 if __name__ == '__main__':
     if envmode == 'prod':
