@@ -1,0 +1,6 @@
+venv/
+TPL.code-workspace
+*.svg
+*.png
+__pycache__/
+variables.txt
