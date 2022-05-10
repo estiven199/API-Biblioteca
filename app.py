@@ -15,9 +15,6 @@ conn = pymongo.MongoClient("mongodb+srv://{}:{}@{}.mongodb.net/retryWrites=true&
 db_configlobal = conn['library']
 
 
-
-
-
 if __name__ == '__main__':
     if envmode == 'prod':
         app.run(ssl_context='adhoc',host='0.0.0.0',port=80)
