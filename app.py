@@ -21,9 +21,12 @@ def books():
             return args
         data_full = utl.search_in_base_data_interna(args) 
         if len(data_full) == 0:
-            data_full = utl.search_in_google(args)  
+            data_full_google = utl.search_in_(args,'google')
+            [data_full.append(item) for item in data_full_google if item['id'] != "" ]
+            data_full_nytimes = utl.search_in_(args,'nytimes')
+            [data_full.append(item) for item in data_full_nytimes if item['id'] != "" ]
 
-        return jsonify(args)
+        return jsonify(data_full)
 
 
 if __name__ == '__main__':
