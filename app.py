@@ -39,7 +39,7 @@ def books():
         if type(database) != pymongo.database.Database:
             return args
         json_ = utl.search_in_(args,args['fuente'],'PUT')
-        if type(json_) == str and'error' in json_.keys():
+        if type(json_) == str:
             return jsonify(json_)
         json_ = json_[-1]  
         del json_['id']

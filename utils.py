@@ -232,7 +232,7 @@ class utils:
             return self.json_nytimes(r)
         if 'errors' in r.keys():
             return {'error': r['errors']}
-        return ''
+        return 'Error in the process'
 
     def validation_fields(self, json, requ):
         try:
