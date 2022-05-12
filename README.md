@@ -17,6 +17,7 @@ headers = {
 La private_key_id  es obligatorio ser codificarla con base64.
 
 GET
+
 Campos permitidos:'id',titulo','subtitulo','autor','categoria','fecha_publicacion','editor','descripcion' ,'fields'
 Aspectos a considerar:
 Para buscar varias categorias y/o autores es necesario enviarlos en string separados por coma asi:
@@ -25,7 +26,10 @@ El campo fields es opcional y se usa para indicar que campos del reponse quieres
 'titulo,subtitulo' ***
 Si busca por id no require de mas campos.
 El formato de busqueda de la fecha es 'YYYY-MM-DD' "2020-12-21"
-Ejemplo"
+
+Ejemplo.
+
+
 import json
 import base64
 mport requests
