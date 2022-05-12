@@ -91,7 +91,7 @@ class utils:
                 "titulo": "title",
                 "autor": "author",
                 "fecha_publicacion": "published_date",
-                "editor": "inpublisher"}}
+                "editor": "publisher"}}
         return json[source]
 
     def equivalence_fields_json(self, source):

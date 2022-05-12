@@ -30,6 +30,8 @@ def books():
             [data_full.append(item) for item in data_full_google if item['id'] != "" ]
             data_full_nytimes = utl.search_in_(args,'nytimes')
             print(data_full_nytimes)
+            if 'error' in data_full_nytimes:
+                return data_full_nytimes
             [data_full.append(item) for item in data_full_nytimes if item['id'] != "" ]
         return jsonify(data_full)
     elif request.method == 'PUT':
