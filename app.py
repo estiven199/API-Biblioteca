@@ -1,5 +1,6 @@
+import json
 import os
-from wsgiref import headers
+from bson import ObjectId
 import certifi
 import pymongo
 import base64
@@ -23,7 +24,22 @@ def books():
     if request.method == 'GET':
         headers = request.headers
         val = auth.login(db_base,headers)
-        return jsonify(val)
+        if val:
+            args = request.args
+            args.to_dict(flat=False)
+            
+            extra_param = []
+
+            for i in args:
+                print(i)
+                if i == "id":
+                    extra_param.append({"_id": ObjectId(args[i])})   
+                elif i == 'fields':pass
+
+                    # print(args[i])
+                else:
+                    extra_param.append({i: args[i]})    
+            return args
 
 if __name__ == '__main__':
     if envmode == 'prod':
