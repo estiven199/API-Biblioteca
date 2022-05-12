@@ -54,7 +54,6 @@ def books():
         except Exception as e:
             e = sys.exc_info()[1]
             return jsonify(e.args[0])  
-        
         return jsonify({"message": "The books note has been deleted."})
 
 if __name__ == '__main__':
