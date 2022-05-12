@@ -46,15 +46,18 @@ class utils:
             "additionalProperties": False,
             'properties': {
                 'id': {'type': 'string'},
-                'fuente': {"type": "string"},
+                'fuente': {"type": "string", "enum": ["google", "nytimes"]},
             },
-        "required": [
-            "id",
-            "fuente",
-        ]
+            "required": [
+                "id",
+                "fuente",
+            ]
         }
-        self.urls = {"google": 'https://www.googleapis.com/books/v1/volumes?q=+',
-                     "nytimes": 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' + api_key + '&'}
+        self.urls = {"google": {'GET': 'https://www.googleapis.com/books/v1/volumes?q=+',
+                                'PUT': 'https://www.googleapis.com/books/v1/volumes/'},
+                     "nytimes": {'GET': 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' + api_key + '&',
+                                 'PUT': 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' + api_key + '&'}
+                     }
 
     def complete_json(self, json_, keys):
         required_fields = ['id', 'titulo', 'subtitulo', 'autor', 'categoria',
@@ -83,7 +86,7 @@ class utils:
     def equivalence_fields_json(self, source):
         json = {
             "google": {
-                "industryIdentifiers": "id",
+                "id": "id",
                 "title": "titulo",
                 "authors": "autor",
                 "categories": "categoria",
@@ -105,11 +108,12 @@ class utils:
 
     def json_google(self, r):
         keys = ['title', 'authors', 'categories', 'descripcion',
-                'publisher', 'publishedDate', 'imageLinks', 'industryIdentifiers']
+                'publisher', 'publishedDate', 'imageLinks', 'id']
         json_keys = self.equivalence_fields_json('google')
         responsive = []
         for books in r['items']:
             json_ = {}
+            books['volumeInfo']['id'] = books['id']
             for key in books['volumeInfo'].keys():
                 if key in keys:
                     json_.update({json_keys[key]: books['volumeInfo'][key]})
@@ -152,7 +156,11 @@ class utils:
         response = []
         for i in args:
             if i == "id":
-                extra_param.append({"_id": ObjectId(args[i])})
+                try:
+                    extra_param.append({"_id": ObjectId(args[i])})
+                except Exception as e:
+                    e = sys.exc_info()[1]
+                    return e.args[0]
             elif i == 'fields':
                 show_fields = self.more_filters_per_field(args[i])
                 if 'error' in show_fields.keys():
@@ -178,32 +186,41 @@ class utils:
             response.append(doc)
         return response
 
-    def search_in_(self, args, fuente):
+    def search_in_(self, args, fuente, req='GET'):
         json_keys = self.equivalence_fields_filter(fuente)
         filter_string = ''
-        if 'id' in args.keys():
-            return {'Error': 'No more results'}
-        if fuente == 'google':
-            s = ":"
-            l = "+"
+        if req == 'GET':
+            if fuente == 'google':
+                s = ":"
+                l = "+"
+            else:
+                s = "="
+                l = "&"
+            for k, v in args.items():
+                if k != 'fields':
+                    if fuente == 'google':
+                        v = v.replace(' ', '+')
+                    if len(filter_string) > 1:
+                        filter_string += l+json_keys[k] + s + v
+                    else:
+                        filter_string += json_keys[k] + s + v
         else:
-            s = "="
-            l = "&"
-        for k, v in args.items():
-            if k != 'fields':
-                if fuente == 'google':
-                    v = v.replace(' ', '+')
-                if len(filter_string) > 1:
-                    filter_string += l+json_keys[k] + s + v
-                else:
-                    filter_string += json_keys[k] + s + v
-        url = self.urls[fuente]
+            if fuente == 'google':
+                filter_string = args['id']
+            else:
+                filter_string = 'isbn='+args['id']
+        url = self.urls[fuente][req]
         request = requests.get(url=url+filter_string).text
         r = json.loads(request)
         if 'totalItems' in r.keys() and r['totalItems']:
             return self.json_google(r)
+        if 'volumeInfo' in r.keys():
+            r['items'] = [r]
+            return self.json_google(r)
         if 'results' in r.keys() and len(r['results']) > 0:
             return self.json_nytimes(r)
+        if 'errors' in r.keys():
+            return {'error': r['errors']}
         return ''
 
     def validation_fields(self, json, requ):
