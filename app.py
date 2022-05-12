@@ -11,6 +11,9 @@ CORS(app)
 envmode = os.environ.get('envmode')
 utl = utils.utils()
 
+@app.route('/')
+def index():
+    return jsonify({'code':'401','message': 'Unauthorized'} )
 
 @app.route('/api/v1/books', methods=['GET','PUT','DELETE'])
 def books():
