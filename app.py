@@ -12,7 +12,7 @@ envmode = os.environ.get('envmode')
 utl = utils.utils()
 
 
-@app.route('/api/v1/books', methods=['GET'])
+@app.route('/api/v1/books', methods=['GET','PUT'])
 def books():
     if request.method == 'GET':
         headers = request.headers
@@ -22,11 +22,19 @@ def books():
         data_full = utl.search_in_base_data_interna(args) 
         if len(data_full) == 0:
             data_full_google = utl.search_in_(args,'google')
+            if 'Error' in data_full_google:
+                return data_full_google
             [data_full.append(item) for item in data_full_google if item['id'] != "" ]
             data_full_nytimes = utl.search_in_(args,'nytimes')
             [data_full.append(item) for item in data_full_nytimes if item['id'] != "" ]
-
         return jsonify(data_full)
+    if request.method == 'PUT':
+        headers = request.headers
+        database, args = utl.validations(headers,'PUT')
+        if type(database) != pymongo.database.Database:
+            return args
+
+        return(args)    
 
 
 if __name__ == '__main__':

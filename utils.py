@@ -41,6 +41,18 @@ class utils:
                 'fields': {'type': 'string'},
             }
         }
+        self.schema_put = {
+            "type": "object",
+            "additionalProperties": False,
+            'properties': {
+                'id': {'type': 'string'},
+                'fuente': {"type": "string"},
+            },
+        "required": [
+            "id",
+            "fuente",
+        ]
+        }
         self.urls = {"google": 'https://www.googleapis.com/books/v1/volumes?q=+',
                      "nytimes": 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' + api_key + '&'}
 
@@ -55,40 +67,40 @@ class utils:
 
     def equivalence_fields_filter(self, source):
         json = {
-        "google" : {
-            "titulo":"intitle",
-            "autor":"inauthor",
-            "categoria":"subject",
-            "fecha_publicacion":"publishedDate",
-            "editor":"inpublisher"},
-        "nytimes" : {
-            "titulo":"title",
-            "autor":"author",
-            "fecha_publicacion":"published_date",
-            "editor":"inpublisher"}}
+            "google": {
+                "titulo": "intitle",
+                "autor": "inauthor",
+                "categoria": "subject",
+                "fecha_publicacion": "publishedDate",
+                "editor": "inpublisher"},
+            "nytimes": {
+                "titulo": "title",
+                "autor": "author",
+                "fecha_publicacion": "published_date",
+                "editor": "inpublisher"}}
         return json[source]
 
-    def equivalence_fields_json(self,source):
+    def equivalence_fields_json(self, source):
         json = {
-        "google" : {
-            "industryIdentifiers":"id",
-            "title":"titulo",
-            "authors":"autor",
-            "categories":"categoria",
-            "descripcion":"descripcion",
-            "publishedDate":"fecha_publicacion",
-            "publisher":"editor",
-            "imageLinks":"imagen"},
-        "nytimes" : {
-            "isbns":"id",
-            "title":"titulo",
-            "author":"autor",
-            "description":"descripcion",
-            "created_date":"fecha_publicacion",
-            "publisher":"editor",
-            "book_image":"imagen"
-            
-        }}
+            "google": {
+                "industryIdentifiers": "id",
+                "title": "titulo",
+                "authors": "autor",
+                "categories": "categoria",
+                "descripcion": "descripcion",
+                "publishedDate": "fecha_publicacion",
+                "publisher": "editor",
+                "imageLinks": "imagen"},
+            "nytimes": {
+                "isbns": "id",
+                "title": "titulo",
+                "author": "autor",
+                "description": "descripcion",
+                "created_date": "fecha_publicacion",
+                "publisher": "editor",
+                "book_image": "imagen"
+
+            }}
         return json[source]
 
     def json_google(self, r):
@@ -147,25 +159,30 @@ class utils:
                     print(show_fields['error'])
                 show_fields = {k: int(v) for k, v in show_fields.items()}
             else:
-                categoria = self.more_filters_per_field(
+                filter_1 = self.more_filters_per_field(
                     args[i], field_=i, val=False)
-                if len(categoria) > 1:
-                    filter1 = extra_param.append({'$or': categoria})
+                if len(filter_1) > 1:
+                    extra_param.append({'$or': filter_1})
                 else:
-                    extra_param.append(categoria[0])
+                    extra_param.append(filter_1[0])
+
         if len(show_fields) > 0:
             cursor = db_base.books.find({'$and': extra_param}, show_fields)
         else:
             cursor = db_base.books.find({'$and': extra_param})
         for doc in cursor:
-            doc['_id'] = str(doc['_id'])
+            doc['id'] = str(doc['_id'])
+            del doc['_id']
             doc['fuente'] = 'interna'
+            dict(collections.OrderedDict(sorted(doc.items())))
             response.append(doc)
         return response
 
-    def search_in_(self,args,fuente):
+    def search_in_(self, args, fuente):
         json_keys = self.equivalence_fields_filter(fuente)
         filter_string = ''
+        if 'id' in args.keys():
+            return {'Error': 'No more results'}
         if fuente == 'google':
             s = ":"
             l = "+"
@@ -175,13 +192,13 @@ class utils:
         for k, v in args.items():
             if k != 'fields':
                 if fuente == 'google':
-                    v = v.replace(' ','+')
+                    v = v.replace(' ', '+')
                 if len(filter_string) > 1:
                     filter_string += l+json_keys[k] + s + v
                 else:
-                    filter_string += json_keys[k] + s + v  
+                    filter_string += json_keys[k] + s + v
         url = self.urls[fuente]
-        request = requests.get(url = url+filter_string).text
+        request = requests.get(url=url+filter_string).text
         r = json.loads(request)
         if 'totalItems' in r.keys() and r['totalItems']:
             return self.json_google(r)
@@ -189,21 +206,24 @@ class utils:
             return self.json_nytimes(r)
         return ''
 
-    def validation_fields(self, json):
+    def validation_fields(self, json, requ):
         try:
-            validate(instance=json, schema=self.schema)
+            if requ == 'GET':
+                validate(instance=json, schema=self.schema)
+            else:
+                validate(instance=json, schema=self.schema_put)
             return True
         except Exception as e:
             e = sys.exc_info()[1]
             return e.args[0]
 
-    def validations(self, headers):
+    def validations(self, headers, requ='GET'):
         val = auth.login(db_base, headers)
         if val != True:
             return '', jsonify(val)
         args = request.args
         args = args.to_dict(flat=True)
-        val = self.validation_fields(args)
+        val = self.validation_fields(args, requ)
         if val != True:
             return '', jsonify(val)
         return db_base, args
