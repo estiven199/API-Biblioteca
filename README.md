@@ -30,23 +30,23 @@ El formato de busqueda de la fecha es 'YYYY-MM-DD' "2020-12-21"
 Ejemplo.
 
 
-import json
-import base64
-mport requests
-payload = 'api-biblioteca-43tleytuxq-uc.a.run.app/api/v1/books'
-private_key_id = '919cHQP24ba466147b8@c0651bdc0b08fc-7469104FG2a7fnhgJYTf5821gvfnjhdh.*'
+import json.
+import base64.
+mport requests.
+payload = 'api-biblioteca-43tleytuxq-uc.a.run.app/api/v1/books'.
+private_key_id = '919cHQP24ba466147b8@c0651bdc0b08fc-7469104FG2a7fnhgJYTf5821gvfnjhdh.*'.
 headers = {
 "client_id": "10682011758309545974085","
 private_key_id": base64.b64encode(private_key_id.encode("utf-8")),
 "private_key": "nMIIEvggIBADANyBgkqhpkiG9w0BlAQE"
-}
+}.
 params = {
 'fields':'titulo,subtitulo',
 "editor":"Random",
 'autor':'Gabriel'
-}
-request = requests.get(url=payload,headers=headers,params=params).text
-r = json.loads(request)
+}.
+request = requests.get(url=payload,headers=headers,params=params).text.
+r = json.loads(request).
 
 PUT
 
