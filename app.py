@@ -1,7 +1,8 @@
-
 import os
+import sys
 import utils
 import pymongo
+from bson import ObjectId
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 
@@ -44,8 +45,17 @@ def books():
         del json_['_id']
         return jsonify(json_)  
     elif request.method == 'DELETE':  
-        print(2525)    
-        return ''
+        headers = request.headers
+        database, args = utl.validations(headers,'DELETE')
+        if type(database) != pymongo.database.Database:
+            return jsonify(args) 
+        try:
+            database.books.delete_one({"_id":ObjectId(args['id'])})    
+        except Exception as e:
+            e = sys.exc_info()[1]
+            return jsonify(e.args[0])  
+        
+        return jsonify({"message": "The books note has been deleted."})
 
 if __name__ == '__main__':
     if envmode == 'prod':

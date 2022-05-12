@@ -53,6 +53,17 @@ class utils:
                 "fuente",
             ]
         }
+
+        self.schema_delete = {
+            "type": "object",
+            "additionalProperties": False,
+            'properties': {
+                'id': {'type': 'string'},
+            },
+            "required": [
+                "id",
+            ]
+        }
         self.urls = {"google": {'GET': 'https://www.googleapis.com/books/v1/volumes?q=+',
                                 'PUT': 'https://www.googleapis.com/books/v1/volumes/'},
                      "nytimes": {'GET': 'https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=' + api_key + '&',
@@ -227,8 +238,10 @@ class utils:
         try:
             if requ == 'GET':
                 validate(instance=json, schema=self.schema)
-            else:
+            elif requ == 'PUT':
                 validate(instance=json, schema=self.schema_put)
+            else:
+                validate(instance=json, schema=self.schema_delete)    
             return True
         except Exception as e:
             e = sys.exc_info()[1]
