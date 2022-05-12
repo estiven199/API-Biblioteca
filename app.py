@@ -19,11 +19,9 @@ def books():
         database, args = utl.validations(headers)
         if type(database) != pymongo.database.Database:
             return args
-        # extra_param, show_fields = utl.choose_extra_param(args)
-        # if extra_param == 'error':
-        #     return show_fields
-
-        # data = database.books.find()
+        data_full = utl.search_in_base_data_interna(args) 
+        if len(data_full) == 0:
+            data_full = utl.search_in_google(args)  
 
         return jsonify(args)
 

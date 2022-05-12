@@ -1,7 +1,10 @@
 import os
 import sys
+import json
 import certifi
 import pymongo
+import requests
+import collections
 import authentication
 from bson import ObjectId
 from flask import jsonify, request
@@ -36,6 +39,60 @@ class utils:
                 'fields': {'type': 'string'},
             }
         }
+    
+    def complete_json(self,json_,keys):
+        required_fields = [ 'id','titulo','subtitulo','autor','categoria','fecha_publicacion','editor','descripcion','imagen']
+        keys = [key for key in json_.keys()]
+        missing_fields = set(required_fields) - set(keys)
+        for key in missing_fields:
+            json_.update({key:''})
+        return dict(collections.OrderedDict(sorted(json_.items())))
+
+    def equivalence_fields_filter(self,source):
+        json = {
+        "google" : {
+            "titulo":"intitle",
+            "autor":"inauthor",
+            "categoria":"subject",
+            "fecha_publicacion":"publishedDate",
+            "editor":"inpublisher"},
+        "nt" : {
+            "titulo":"title",
+            "autor":"author",
+            "fecha_publicacion":"published_date",
+            "editor":"inpublisher"}}
+        return json[source]
+
+    def equivalence_fields_json(self,source):
+        json = {
+        "google" : {
+            "industryIdentifiers":"id",
+            "title":"titulo",
+            "authors":"autor",
+            "categories":"categoria",
+            "descripcion":"descripcion",
+            "publishedDate":"fecha_publicacion",
+            "publisher":"editor",
+            "imageLinks":"imagen"},
+        "nt" : {
+            "titulo":"title",
+            "autor":"author",
+            "fecha_publicacion":"published_date",
+            "editor":"inpublisher"}}
+        return json[source]
+    
+    def json_google(self,r):
+        keys = ['title','authors','categories','descripcion','publisher','publishedDate','imageLinks','industryIdentifiers']
+        json_keys = self.equivalence_fields_json('google')
+        responsive = []
+        for books in r['items']:
+            json_ = {}
+            for key in books['volumeInfo'].keys():
+                if key in keys:
+                    json_.update({json_keys[key]:books['volumeInfo'][key]})
+                    json_['fuente'] = 'google'
+                    responsive.append(self.complete_json(json_,keys))
+            return responsive
 
     def more_filters_per_field(self, fields, field_='', val=True):
         show_fields = {}
@@ -79,6 +136,20 @@ class utils:
             doc['fuente'] = 'interna'
             response.append(doc)
         return response
+
+    def search_in_google(self,args):
+        json_keys = self.equivalence_fields_filter('google')
+        filter_string = ''
+        for k, v in args.items():
+            if k != 'fields':
+                v = v.replace(' ','+')
+                if len(filter_string) > 1:
+                    filter_string += '+'+json_keys[k] + ':' + v
+                else:
+                    filter_string += json_keys[k] + ':' + v  
+        request = requests.get(url = 'https://www.googleapis.com/books/v1/volumes?q=+'+filter_string).text
+        r = json.loads(request)
+        return self.json_google(r)
 
     def validation_fields(self, json):
         try:
