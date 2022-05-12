@@ -90,7 +90,8 @@ class utils:
             "nytimes": {
                 "titulo": "title",
                 "autor": "author",
-                "fecha_publicacion": "published_date",
+                "categoria": "title",
+                "fecha_publicacion": "title",
                 "editor": "publisher"}}
         return json[source]
 
@@ -153,7 +154,7 @@ class utils:
             [show_fields.update({field: "1"})
              for field in data if field != '']
             if len(show_fields) > 0:
-                val = self.validation_fields(show_fields)
+                val = self.validation_fields(show_fields,requ='GET')
                 if val != True:
                     return {'error': val}
             return show_fields
@@ -175,7 +176,7 @@ class utils:
             elif i == 'fields':
                 show_fields = self.more_filters_per_field(args[i])
                 if 'error' in show_fields.keys():
-                    print(show_fields['error'])
+                    return show_fields['error']
                 show_fields = {k: int(v) for k, v in show_fields.items()}
             else:
                 filter_1 = self.more_filters_per_field(
@@ -184,7 +185,6 @@ class utils:
                     extra_param.append({'$or': filter_1})
                 else:
                     extra_param.append(filter_1[0])
-
         if len(show_fields) > 0:
             cursor = db_base.books.find({'$and': extra_param}, show_fields)
         else:
