@@ -24,7 +24,7 @@ headers = {
 "private_key": "nMIIEvggIBADANyBgkqhpkiG9w0BlAQE"
 }
 
-La private_key_id  es obligatorio ser codificarla con base64.
+La private_key_id  es obligatorio codificarla con base64.
 
 GET
 
