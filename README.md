@@ -1,6 +1,6 @@
 # API-Biblioteca
 
-https://apibiblioteca-43tleytuxq-uc.a.run.app
+https://apibiblioteca-43tleytuxq-uc.a.run.app/api/v1/books
 
 
 Para la base de datos se utiliza mongodb
@@ -11,7 +11,7 @@ Se integro developer.nytimes.com/ como el segundo servicio de busqueda de libros
 
 Se desplego la API en Google Cloud
 
-La url para el consumo del API es https://apibiblioteca-43tleytuxq-uc.a.run.app
+La url para el consumo del API es https://apibiblioteca-43tleytuxq-uc.a.run.app/api/v1/books
 
 LA API solo permite tres tipos de peticiones. GET, PUT y DELETE.
 
