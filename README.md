@@ -95,4 +95,4 @@ request = requests.delete(url=payload,headers=headers,params=params).text
 
 r = json.loads(request)
 
-*** Estos campos solo afectan cuando las busqyueda es en la base de datos interna
+*** Estos campos solo afectan cuando las busqueda es en la base de datos interna
